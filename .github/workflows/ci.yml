@@ -24,40 +24,59 @@ jobs:
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and push Docker image to TEST ECR
+      # -----------------------------
+      # TEST ENVIRONMENT
+      # -----------------------------
+
+      - name: Build Docker image for TEST (SHA)
         run: |
           IMAGE_TAG=${GITHUB_SHA}
           ECR_REGISTRY=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
           ECR_REPOSITORY_TEST=${{ secrets.ECR_REPOSITORY_TEST }}
-
-          echo "Building image with tag: $IMAGE_TAG"
-
-          # Build with commit SHA
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_TEST:$IMAGE_TAG .
 
-          # Tag as latest
+      - name: Tag Docker image for TEST as latest
+        run: |
+          IMAGE_TAG=${GITHUB_SHA}
+          ECR_REGISTRY=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          ECR_REPOSITORY_TEST=${{ secrets.ECR_REPOSITORY_TEST }}
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY_TEST:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_TEST:latest
-
-          # Debug
           docker images | grep $ECR_REPOSITORY_TEST
 
-          # Push both tags
+      - name: Push Docker image to TEST ECR (SHA and latest)
+        run: |
+          IMAGE_TAG=${GITHUB_SHA}
+          ECR_REGISTRY=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          ECR_REPOSITORY_TEST=${{ secrets.ECR_REPOSITORY_TEST }}
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_TEST:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_TEST:latest
 
-      - name: Build and push Docker image to PROD ECR (only on manual trigger)
+      # -----------------------------
+      # PROD ENVIRONMENT (manual trigger)
+      # -----------------------------
+
+      - name: Build Docker image for PROD (SHA)
         if: github.event_name == 'workflow_dispatch'
         run: |
           IMAGE_TAG=${GITHUB_SHA}
           ECR_REGISTRY=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
           ECR_REPOSITORY_PROD=${{ secrets.ECR_REPOSITORY_PROD }}
-
-          # Build with commit SHA
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_PROD:$IMAGE_TAG .
 
-          # Tag same image as latest
+      - name: Tag Docker image for PROD as latest
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          IMAGE_TAG=${GITHUB_SHA}
+          ECR_REGISTRY=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          ECR_REPOSITORY_PROD=${{ secrets.ECR_REPOSITORY_PROD }}
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY_PROD:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_PROD:latest
+          docker images | grep $ECR_REPOSITORY_PROD
 
-          # Push both tags
+      - name: Push Docker image to PROD ECR (SHA and latest)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          IMAGE_TAG=${GITHUB_SHA}
+          ECR_REGISTRY=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          ECR_REPOSITORY_PROD=${{ secrets.ECR_REPOSITORY_PROD }}
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_PROD:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_PROD:latest
