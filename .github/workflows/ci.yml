@@ -1,0 +1,44 @@
+name: CI - Build and Push Docker Images to ECR (Test & Prod)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # allows manual trigger too
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image to TEST ECR
+        run: |
+          IMAGE_TAG=${GITHUB_SHA}
+          ECR_REGISTRY=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          ECR_REPOSITORY_TEST=${{ secrets.ECR_REPOSITORY_TEST }}
+
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_TEST:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_TEST:$IMAGE_TAG
+
+      - name: Build and push Docker image to PROD ECR (only on manual trigger)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          IMAGE_TAG=${GITHUB_SHA}
+          ECR_REGISTRY=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          ECR_REPOSITORY_PROD=${{ secrets.ECR_REPOSITORY_PROD }}
+
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_PROD:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_PROD:$IMAGE_TAG
