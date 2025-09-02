@@ -33,10 +33,13 @@ jobs:
           # Build with commit SHA
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_TEST:$IMAGE_TAG .
 
-          # Tag as latest
+          # Tag same image as latest
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY_TEST:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_TEST:latest
 
-          # Push both
+          # Debug
+          docker images
+
+          # Push both tags
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_TEST:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_TEST:latest
 
@@ -50,9 +53,9 @@ jobs:
           # Build with commit SHA
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_PROD:$IMAGE_TAG .
 
-          # Tag as latest
+          # Tag same image as latest
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY_PROD:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_PROD:latest
 
-          # Push both
+          # Push both tags
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_PROD:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_PROD:latest
