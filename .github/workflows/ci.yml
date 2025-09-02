@@ -30,14 +30,16 @@ jobs:
           ECR_REGISTRY=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
           ECR_REPOSITORY_TEST=${{ secrets.ECR_REPOSITORY_TEST }}
 
+          echo "Building image with tag: $IMAGE_TAG"
+
           # Build with commit SHA
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_TEST:$IMAGE_TAG .
 
-          # Tag same image as latest
+          # Tag as latest
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY_TEST:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_TEST:latest
 
           # Debug
-          docker images
+          docker images | grep $ECR_REPOSITORY_TEST
 
           # Push both tags
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_TEST:$IMAGE_TAG
