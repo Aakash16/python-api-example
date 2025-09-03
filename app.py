@@ -133,5 +133,9 @@ api.add_resource(AddRecord, "/add-record")
 api.add_resource(Records, "/records")
 api.add_resource(UppercaseText, "/uppercase")
 
+@app.route("/")
+def health():
+    return "OK", 200
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=False)
